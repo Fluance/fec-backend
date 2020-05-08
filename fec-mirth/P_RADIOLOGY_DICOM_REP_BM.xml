@@ -1,0 +1,580 @@
+<channel version="3.8.1">
+  <id>056f65c0-5b98-4bfc-be18-0a7204f350fc</id>
+  <nextMetaDataId>2</nextMetaDataId>
+  <name>P_RADIOLOGY_DICOM_REP_BM</name>
+  <description></description>
+  <revision>1</revision>
+  <sourceConnector version="3.8.1">
+    <metaDataId>0</metaDataId>
+    <name>sourceConnector</name>
+    <properties class="com.mirth.connect.connectors.vm.VmReceiverProperties" version="3.8.1">
+      <pluginProperties/>
+      <sourceConnectorProperties version="3.8.1">
+        <responseVariable>None</responseVariable>
+        <respondAfterProcessing>true</respondAfterProcessing>
+        <processBatch>false</processBatch>
+        <firstResponse>false</firstResponse>
+        <processingThreads>1</processingThreads>
+        <resourceIds class="linked-hash-map">
+          <entry>
+            <string>Default Resource</string>
+            <string>[Default Resource]</string>
+          </entry>
+        </resourceIds>
+        <queueBufferSize>1000</queueBufferSize>
+      </sourceConnectorProperties>
+    </properties>
+    <transformer version="3.8.1">
+      <elements>
+        <com.mirth.connect.plugins.mapper.MapperStep version="3.8.1">
+          <name>tag00080018</name>
+          <sequenceNumber>0</sequenceNumber>
+          <enabled>true</enabled>
+          <variable>tag00080018</variable>
+          <mapping>msg[&apos;tag00080018&apos;].toString()</mapping>
+          <defaultValue></defaultValue>
+          <replacements/>
+          <scope>CHANNEL</scope>
+        </com.mirth.connect.plugins.mapper.MapperStep>
+        <com.mirth.connect.plugins.mapper.MapperStep version="3.8.1">
+          <name>tag00080070</name>
+          <sequenceNumber>1</sequenceNumber>
+          <enabled>true</enabled>
+          <variable>tag00080070</variable>
+          <mapping>msg[&apos;tag00080070&apos;].toString()</mapping>
+          <defaultValue></defaultValue>
+          <replacements/>
+          <scope>CHANNEL</scope>
+        </com.mirth.connect.plugins.mapper.MapperStep>
+      </elements>
+      <inboundTemplate encoding="base64"></inboundTemplate>
+      <outboundTemplate encoding="base64"></outboundTemplate>
+      <inboundDataType>DICOM</inboundDataType>
+      <outboundDataType>DICOM</outboundDataType>
+      <inboundProperties class="com.mirth.connect.plugins.datatypes.dicom.DICOMDataTypeProperties" version="3.8.1"/>
+      <outboundProperties class="com.mirth.connect.plugins.datatypes.dicom.DICOMDataTypeProperties" version="3.8.1"/>
+    </transformer>
+    <filter version="3.8.1">
+      <elements/>
+    </filter>
+    <transportName>Channel Reader</transportName>
+    <mode>SOURCE</mode>
+    <enabled>true</enabled>
+    <waitForPrevious>true</waitForPrevious>
+  </sourceConnector>
+  <destinationConnectors>
+    <connector version="3.8.1">
+      <metaDataId>1</metaDataId>
+      <name>BM-DICOM-PGSQL-OPERATE</name>
+      <properties class="com.mirth.connect.connectors.jdbc.DatabaseDispatcherProperties" version="3.8.1">
+        <pluginProperties/>
+        <destinationConnectorProperties version="3.8.1">
+          <queueEnabled>false</queueEnabled>
+          <sendFirst>false</sendFirst>
+          <retryIntervalMillis>10000</retryIntervalMillis>
+          <regenerateTemplate>false</regenerateTemplate>
+          <retryCount>0</retryCount>
+          <rotate>false</rotate>
+          <includeFilterTransformer>false</includeFilterTransformer>
+          <threadCount>1</threadCount>
+          <threadAssignmentVariable></threadAssignmentVariable>
+          <validateResponse>false</validateResponse>
+          <resourceIds class="linked-hash-map">
+            <entry>
+              <string>Default Resource</string>
+              <string>[Default Resource]</string>
+            </entry>
+          </resourceIds>
+          <queueBufferSize>1000</queueBufferSize>
+          <reattachAttachments>true</reattachAttachments>
+        </destinationConnectorProperties>
+        <driver>org.postgresql.Driver</driver>
+        <url></url>
+        <username></username>
+        <password></password>
+        <query>try {
+
+	var dbConn = getDBConnectionOperate();
+
+	dbConn.setAutoCommit(false);
+
+	var sf = &quot;SELECT insert_rdl_report(&apos;&quot; + $(&apos;tag00080018&apos;) + &quot;&apos;,&apos;&quot; + $(&apos;tag00080070&apos;) + &quot;&apos;)&quot;;
+	var result = dbConn.executeUpdate(sf);
+
+	dbConn.executeUpdate(&apos;COMMIT&apos;);
+} catch(e) {
+	dbConn.executeUpdate(&apos;ROLLBACK&apos;);
+	
+	logger.error(e.message);
+	return new Response(ERROR, e.message, &apos;BM-DICOM-PGSQL-OPERATE&apos;, e.message + &quot; \nFile &quot; + $(&apos;originalFilename&apos;));
+} finally {
+	// Close DB connection
+	if (dbConn)
+		dbConn.close();
+}</query>
+        <useScript>true</useScript>
+      </properties>
+      <transformer version="3.8.1">
+        <elements/>
+        <inboundTemplate encoding="base64"></inboundTemplate>
+        <outboundTemplate encoding="base64"></outboundTemplate>
+        <inboundDataType>DICOM</inboundDataType>
+        <outboundDataType>DICOM</outboundDataType>
+        <inboundProperties class="com.mirth.connect.plugins.datatypes.dicom.DICOMDataTypeProperties" version="3.8.1"/>
+        <outboundProperties class="com.mirth.connect.plugins.datatypes.dicom.DICOMDataTypeProperties" version="3.8.1"/>
+      </transformer>
+      <responseTransformer version="3.8.1">
+        <elements/>
+        <inboundDataType>DICOM</inboundDataType>
+        <outboundDataType>DICOM</outboundDataType>
+        <inboundProperties class="com.mirth.connect.plugins.datatypes.dicom.DICOMDataTypeProperties" version="3.8.1"/>
+        <outboundProperties class="com.mirth.connect.plugins.datatypes.dicom.DICOMDataTypeProperties" version="3.8.1"/>
+      </responseTransformer>
+      <filter version="3.8.1">
+        <elements/>
+      </filter>
+      <transportName>Database Writer</transportName>
+      <mode>DESTINATION</mode>
+      <enabled>true</enabled>
+      <waitForPrevious>true</waitForPrevious>
+    </connector>
+  </destinationConnectors>
+  <preprocessingScript>// Modify the message variable below to pre process data
+return message;</preprocessingScript>
+  <postprocessingScript>// This script executes once after a message has been processed
+// Responses returned from here will be stored as &quot;Postprocessor&quot; in the response map
+return;</postprocessingScript>
+  <deployScript>// This script executes once when the channel is deployed
+// You only have access to the globalMap and globalChannelMap here to persist data
+return;</deployScript>
+  <undeployScript>// This script executes once when the channel is undeployed
+// You only have access to the globalMap and globalChannelMap here to persist data
+return;</undeployScript>
+  <properties version="3.8.1">
+    <clearGlobalChannelMap>true</clearGlobalChannelMap>
+    <messageStorageMode>DEVELOPMENT</messageStorageMode>
+    <encryptData>false</encryptData>
+    <removeContentOnCompletion>false</removeContentOnCompletion>
+    <removeOnlyFilteredOnCompletion>false</removeOnlyFilteredOnCompletion>
+    <removeAttachmentsOnCompletion>false</removeAttachmentsOnCompletion>
+    <initialState>STARTED</initialState>
+    <storeAttachments>false</storeAttachments>
+    <metaDataColumns>
+      <metaDataColumn>
+        <name>SOURCE</name>
+        <type>STRING</type>
+        <mappingName>mirth_source</mappingName>
+      </metaDataColumn>
+      <metaDataColumn>
+        <name>TYPE</name>
+        <type>STRING</type>
+        <mappingName>mirth_type</mappingName>
+      </metaDataColumn>
+    </metaDataColumns>
+    <attachmentProperties version="3.8.1">
+      <className>com.mirth.connect.server.attachments.dicom.DICOMAttachmentHandlerProvider</className>
+      <type>DICOM</type>
+      <properties/>
+    </attachmentProperties>
+    <resourceIds class="linked-hash-map">
+      <entry>
+        <string>Default Resource</string>
+        <string>[Default Resource]</string>
+      </entry>
+    </resourceIds>
+  </properties>
+  <exportData>
+    <metadata>
+      <enabled>false</enabled>
+      <lastModified>
+        <time>1588839445050</time>
+        <timezone>Europe/Zurich</timezone>
+      </lastModified>
+      <pruningSettings>
+        <archiveEnabled>true</archiveEnabled>
+      </pruningSettings>
+    </metadata>
+    <codeTemplateLibraries>
+      <codeTemplateLibrary version="3.8.1">
+        <id>f0e9cf4f-0b82-4540-9d1d-f0b1a3049793</id>
+        <name>Fluance_data_lib</name>
+        <revision>15</revision>
+        <lastModified>
+          <time>1588835289814</time>
+          <timezone>Europe/Zurich</timezone>
+        </lastModified>
+        <description>Fluance librairies used in inbound channels</description>
+        <includeNewChannels>true</includeNewChannels>
+        <enabledChannelIds>
+          <string>9a0cc494-54d4-42e7-abba-7b465edc2221</string>
+          <string>879b3dc6-87b8-4574-b293-41beefdb8d40</string>
+          <string>94baac2e-413b-41d1-a40e-150aeac71a95</string>
+          <string>8c485454-f437-4a6b-b00f-935221bdd9a5</string>
+          <string>281501ca-9b61-41c4-b3cf-6c9306ee8d7b</string>
+          <string>74d83325-f4b6-4946-a4f4-bbbe65cbab31</string>
+          <string>44aea90f-dccf-4067-bcba-29067fc2a1a3</string>
+          <string>717c1a18-87a3-4acb-9b3a-f104e34436cc</string>
+          <string>49f688db-b333-4f09-9159-94c3e4c23e7a</string>
+          <string>874f2eb9-068c-4503-973c-efd4f9658f50</string>
+          <string>0e57621f-c3c7-4ad6-83c4-eef58a5a68e6</string>
+          <string>a276c288-86ee-4f7b-818d-739b614c4be2</string>
+          <string>5f3d4cf4-5ab1-4124-82f7-f17e06da5895</string>
+          <string>3bf01ad0-6d60-4a1f-8408-fcad9737eb90</string>
+          <string>c3c522c6-6be8-42e5-9541-4d0080dd78c6</string>
+          <string>eaa07b61-d21e-40ce-8aee-22ffdc28039b</string>
+          <string>c21ec84b-289a-4bc3-846b-6b9f5f7ada99</string>
+          <string>8e2f6fc7-4e63-49df-a9f4-16880c39878b</string>
+          <string>ece05f84-f7c6-4a94-a4c4-e4f4fd1972a3</string>
+          <string>478e61fd-7940-4573-bf7d-51ad00f620dc</string>
+          <string>e759141c-6e1a-4e99-97a3-65429b234d06</string>
+          <string>aac83ffb-3fc1-4e82-b8c5-e96f403377c3</string>
+          <string>d8031e7e-6427-4586-b1ba-3a620bde89a6</string>
+          <string>37984d59-0503-480d-b727-57390191e038</string>
+          <string>4f344cf3-f7f6-4960-8952-03c33ff11591</string>
+          <string>dfb0cbea-6b82-4360-baa4-29efbb52edfa</string>
+          <string>e3307813-3364-471b-a519-8bb7ec4ac4fc</string>
+          <string>451acbf2-7908-46d6-89cb-7f22edc9f54f</string>
+          <string>c00eac40-44dc-4f7c-be6d-b03a64245b37</string>
+          <string>c41e842e-a05c-4ac9-898a-3cedd542be6c</string>
+          <string>f7c33872-3b24-4fc3-a760-baf648a3026b</string>
+          <string>d61e8e28-eb9f-4976-a0f0-d2f55da6fcb9</string>
+          <string>5729f06f-f2bc-4e7f-81c6-ab47ad23769d</string>
+          <string>79400972-3028-45db-9239-f56d92998096</string>
+          <string>90c9c37b-9109-4a10-a946-39aa093ef108</string>
+          <string>0a418593-8292-4a6b-b672-097f1b95aa36</string>
+          <string>29bef627-5166-4fff-8ca4-86dbf95414af</string>
+          <string>f6da390d-aa45-4076-a109-c77ffa7bef78</string>
+          <string>37291eb3-65f7-4dca-b875-247912b328b8</string>
+          <string>bfb5c2e1-9a38-4266-aa6a-a7629d4d8d80</string>
+        </enabledChannelIds>
+        <disabledChannelIds>
+          <string>c697697b-7578-43d4-a594-655ce5003da4</string>
+        </disabledChannelIds>
+        <codeTemplates>
+          <codeTemplate version="3.8.1">
+            <id>f33fd6e1-7b27-400f-9038-5423a76ac7b5</id>
+            <name>appendParentORU</name>
+            <revision>6</revision>
+            <lastModified>
+              <time>1588835440384</time>
+              <timezone>Europe/Zurich</timezone>
+            </lastModified>
+            <contextSet>
+              <delegate>
+                <contextType>DESTINATION_FILTER_TRANSFORMER</contextType>
+                <contextType>SOURCE_FILTER_TRANSFORMER</contextType>
+                <contextType>SOURCE_RECEIVER</contextType>
+                <contextType>DESTINATION_DISPATCHER</contextType>
+                <contextType>DESTINATION_RESPONSE_TRANSFORMER</contextType>
+              </delegate>
+            </contextSet>
+            <properties class="com.mirth.connect.model.codetemplates.BasicCodeTemplateProperties">
+              <type>FUNCTION</type>
+              <code>/**
+	Add Parent OBR and OBX segments to an ORU HL7 message
+*/
+/*
+	Author: Florian Gossin
+
+	@param {Any} tmpxml - original XML message
+	@return {XML} modified XML message
+*/
+function appendParentORU(tmpxml) {
+	for each (obr in tmpxml..OBR) {
+		var obrid = obr[&apos;OBR.1&apos;][&apos;OBR.1.1&apos;].toString();
+		var nteOBRGroup = getSegmentsAfter(tmpxml,obr,&apos;NTE&apos;,true);
+		for each (nte in nteOBRGroup) {
+			nte.PARENTOBR = obrid;
+		}
+		var obxGroup = getSegmentsAfter(tmpxml,obr,&apos;OBX&apos;,false);
+		for each (obx in obxGroup) {
+			obx.PARENTOBR = obrid;
+			var obxid = obx[&apos;OBX.1&apos;][&apos;OBX.1.1&apos;].toString();
+			var nteOBXGroup = getSegmentsAfter(tmpxml,obx,&apos;NTE&apos;,true);
+			for each (nte in nteOBXGroup) {
+				nte.PARENTOBR = obrid;
+				nte.PARENTOBX = obxid;
+			}
+		}
+	}
+	return tmpxml;
+}</code>
+            </properties>
+          </codeTemplate>
+          <codeTemplate version="3.8.1">
+            <id>96e32adb-9e3d-45ff-a083-95a7baebbf0d</id>
+            <name>Get element data type</name>
+            <revision>4</revision>
+            <lastModified>
+              <time>1588835429077</time>
+              <timezone>Europe/Zurich</timezone>
+            </lastModified>
+            <contextSet>
+              <delegate>
+                <contextType>DESTINATION_FILTER_TRANSFORMER</contextType>
+                <contextType>SOURCE_FILTER_TRANSFORMER</contextType>
+                <contextType>SOURCE_RECEIVER</contextType>
+                <contextType>DESTINATION_DISPATCHER</contextType>
+                <contextType>DESTINATION_RESPONSE_TRANSFORMER</contextType>
+              </delegate>
+            </contextSet>
+            <properties class="com.mirth.connect.model.codetemplates.BasicCodeTemplateProperties">
+              <type>FUNCTION</type>
+              <code>/**
+	Return the data type of an XML element
+*/
+/*
+	Author: Florian Gossin
+
+	
+	Return the data type of an XML element
+*/
+function getElementDatatype(element) {
+	if (element.toString() != &quot;&quot;) {
+
+		if (!isNaN(element))
+			return new Number(element);
+		else if (element.toString()==&quot;true&quot;)
+			return new Boolean(true);
+		else if (element.toString()==&quot;false&quot;)
+			return new Boolean(false);
+		else
+			return new String(element).replace(/&apos;/g, &quot;&apos;&apos;&quot;);
+
+	} else
+		return null;
+}</code>
+            </properties>
+          </codeTemplate>
+          <codeTemplate version="3.8.1">
+            <id>270003aa-9350-45a7-9397-58679320cb9d</id>
+            <name>GetSegmentsAfter</name>
+            <revision>1</revision>
+            <lastModified>
+              <time>1454413686914</time>
+              <timezone>Europe/Zurich</timezone>
+            </lastModified>
+            <contextSet>
+              <delegate>
+                <contextType>CHANNEL_ATTACHMENT</contextType>
+                <contextType>GLOBAL_PREPROCESSOR</contextType>
+                <contextType>SOURCE_FILTER_TRANSFORMER</contextType>
+                <contextType>SOURCE_RECEIVER</contextType>
+                <contextType>DESTINATION_DISPATCHER</contextType>
+                <contextType>DESTINATION_RESPONSE_TRANSFORMER</contextType>
+                <contextType>CHANNEL_POSTPROCESSOR</contextType>
+                <contextType>CHANNEL_PREPROCESSOR</contextType>
+                <contextType>GLOBAL_DEPLOY</contextType>
+                <contextType>CHANNEL_DEPLOY</contextType>
+                <contextType>GLOBAL_UNDEPLOY</contextType>
+                <contextType>DESTINATION_FILTER_TRANSFORMER</contextType>
+                <contextType>GLOBAL_POSTPROCESSOR</contextType>
+                <contextType>CHANNEL_BATCH</contextType>
+                <contextType>CHANNEL_UNDEPLOY</contextType>
+              </delegate>
+            </contextSet>
+            <properties class="com.mirth.connect.model.codetemplates.BasicCodeTemplateProperties">
+              <type>FUNCTION</type>
+              <code>/**
+	Returns an array of segments with the specified name that come after a given segment in the message.
+*/
+/*
+	Author: Nick Rupley
+	Date Modified: 2/13/2013
+	getSegmentsAfter: Returns an array of segments with the specified name that come after a given segment in the message.
+
+	Arguments
+	---------
+		Required
+		--------
+			root:			The root HL7Message node of the message, or the parent of the segment node.
+			startSeg:		The segment AFTER which to start collecting segments.
+			segName:		The name (String or RegExp) of the segments you want to collect.
+
+		Optional
+		--------
+			consecutiveInd:	If true, indicates that the segments are expected to come directly after startSeg. 
+							If false, segments are collected until another segment with the same name as startSeg is encountered.
+							Defaults to false.
+			stopSegNames:	An array of segment names that, when encountered, stop the collection of segments.
+*/
+
+function getSegmentsAfter(root, startSeg, segName, consecutiveInd, stopSegNames) {
+	function test(str) {
+		return segName instanceof RegExp ? segName.test(str) : segName === str;
+	}
+
+	// The index to start collection is the next one up from the starting segment
+	var index = startSeg.childIndex()+1;
+	// The return array
+	var out = [];
+	// Boolean placeholder to stop iteration
+	var done = false;
+	// Object that will contain all of the stopSegNames strings, bound to a truthy value (1)
+	var stopNames = {};
+	// Indicates whether we have any stop segments
+	var stopNamesInd = false;
+	// If stopSegNames is defined
+	if (stopSegNames !== undefined &amp;&amp; stopSegNames !== null) {
+		// Set our indicator to true
+		stopNamesInd = true;
+		// Add each string in the array to our object
+		for each (name in stopSegNames)
+			stopNames[name] = 1;
+	}
+
+	// Iterate through each child in the root, starting at the segment after startSeg, and
+	// ending at the final segment, or when the done flag is set to true.
+	while (index &lt; root.children().length() &amp;&amp; !done) {
+		// If a stop segment is encountered, stop iteration
+		if (stopNamesInd &amp;&amp; root.children()[index].name().toString() in stopNames)
+			done = true;
+		// If a segment with the same name as startSeg is encountered, stop iteration
+		else if (root.children()[index].name().toString() == startSeg.name().toString() &amp;&amp; !consecutiveInd)
+			done = true;
+		// If we&apos;re only collecting consecutive segments and we encounter a segment with a name other than segName, stop iteration
+		else if (!test(root.children()[index].name().toString()) &amp;&amp; consecutiveInd)
+			done = true;
+		// If all previous tests passed, and the current segment has a name of segName, then add it to our array
+		else if (test(root.children()[index].name().toString()))
+			out.push(root.children()[index]);
+		// Increment our index counter
+		index++;
+	}
+
+	// Return the output array
+	return out;
+}</code>
+            </properties>
+          </codeTemplate>
+        </codeTemplates>
+      </codeTemplateLibrary>
+      <codeTemplateLibrary version="3.8.1">
+        <id>c3aec380-a214-4174-b619-df7afc21c82f</id>
+        <name>Fluance_db_lib</name>
+        <revision>10</revision>
+        <lastModified>
+          <time>1588835206026</time>
+          <timezone>Europe/Zurich</timezone>
+        </lastModified>
+        <description>Fluance librairies used to connect to the databases</description>
+        <includeNewChannels>true</includeNewChannels>
+        <enabledChannelIds>
+          <string>a276c288-86ee-4f7b-818d-739b614c4be2</string>
+          <string>a0652d74-6cc8-429d-bc5c-9480250ed3a2</string>
+          <string>0a418593-8292-4a6b-b672-097f1b95aa36</string>
+          <string>2e69cb6c-319c-4f98-8556-be4928b6ef44</string>
+        </enabledChannelIds>
+        <disabledChannelIds>
+          <string>c697697b-7578-43d4-a594-655ce5003da4</string>
+        </disabledChannelIds>
+        <codeTemplates>
+          <codeTemplate version="3.8.1">
+            <id>7db832c2-31e0-4129-9613-dfda4a6fef49</id>
+            <name>getDBConnectionInbound</name>
+            <revision>3</revision>
+            <lastModified>
+              <time>1452689728784</time>
+              <timezone>Europe/Zurich</timezone>
+            </lastModified>
+            <contextSet>
+              <delegate>
+                <contextType>DESTINATION_FILTER_TRANSFORMER</contextType>
+                <contextType>SOURCE_FILTER_TRANSFORMER</contextType>
+                <contextType>SOURCE_RECEIVER</contextType>
+                <contextType>DESTINATION_DISPATCHER</contextType>
+                <contextType>DESTINATION_RESPONSE_TRANSFORMER</contextType>
+              </delegate>
+            </contextSet>
+            <properties class="com.mirth.connect.model.codetemplates.BasicCodeTemplateProperties">
+              <type>FUNCTION</type>
+              <code>function getDBConnectionInbound() 
+{
+	var dbName = configurationMap.get(&apos;dbnameinbound&apos;);
+	var dbConn = null;
+	var dbHost = configurationMap.get(&apos;host&apos;);
+	var dbUserName = configurationMap.get(&apos;username&apos;);
+	var dbPassword = configurationMap.get(&apos;password&apos;);
+	var dbPort = configurationMap.get(&apos;port&apos;);
+	
+	try{
+	    dbConn = DatabaseConnectionFactory.createDatabaseConnection(&apos;org.postgresql.Driver&apos;,&apos;jdbc:postgresql://&apos;+ dbHost + &apos;:&apos;+ dbPort +&apos;/&apos;+ dbName, dbUserName, dbPassword);
+	}
+	catch (e)
+	{
+		logger.error(&apos;Error in getDBConnectionInbound. Error: &apos; + e.toString());
+	}
+return dbConn;
+}</code>
+            </properties>
+          </codeTemplate>
+          <codeTemplate version="3.8.1">
+            <id>926d6c6c-0724-40b3-af5e-cf41ec7e4777</id>
+            <name>getDBConnectionOperate</name>
+            <revision>3</revision>
+            <lastModified>
+              <time>1452689728817</time>
+              <timezone>Europe/Zurich</timezone>
+            </lastModified>
+            <contextSet>
+              <delegate>
+                <contextType>DESTINATION_FILTER_TRANSFORMER</contextType>
+                <contextType>SOURCE_FILTER_TRANSFORMER</contextType>
+                <contextType>SOURCE_RECEIVER</contextType>
+                <contextType>DESTINATION_DISPATCHER</contextType>
+                <contextType>DESTINATION_RESPONSE_TRANSFORMER</contextType>
+              </delegate>
+            </contextSet>
+            <properties class="com.mirth.connect.model.codetemplates.BasicCodeTemplateProperties">
+              <type>FUNCTION</type>
+              <code>function getDBConnectionOperate() 
+{
+	var dbName = configurationMap.get(&apos;dbnameoperate&apos;);
+	var dbConn = null;
+	var dbHost = configurationMap.get(&apos;host&apos;);
+	var dbUserName = configurationMap.get(&apos;username&apos;);
+	var dbPassword = configurationMap.get(&apos;password&apos;);
+	var dbPort = configurationMap.get(&apos;port&apos;);
+	
+	try{
+	    dbConn = DatabaseConnectionFactory.createDatabaseConnection(&apos;org.postgresql.Driver&apos;,&apos;jdbc:postgresql://&apos;+ dbHost + &apos;:&apos;+ dbPort +&apos;/&apos;+ dbName, dbUserName, dbPassword);
+	}
+	catch (e)
+	{
+		logger.error(&apos;Error in getDBConnectionOperate. Error: &apos; + e.toString());
+	}
+return dbConn;
+}</code>
+            </properties>
+          </codeTemplate>
+        </codeTemplates>
+      </codeTemplateLibrary>
+    </codeTemplateLibraries>
+    <channelTags>
+      <channelTag>
+        <id>326cd4c2-7e1d-4bb8-93cc-ab582bb9f982</id>
+        <name>Operate</name>
+        <channelIds>
+          <string>0f24f16f-e19b-4d75-861d-56dd36ab7665</string>
+          <string>e3307813-3364-471b-a519-8bb7ec4ac4fc</string>
+          <string>879b3dc6-87b8-4574-b293-41beefdb8d40</string>
+          <string>3bf01ad0-6d60-4a1f-8408-fcad9737eb90</string>
+          <string>ece05f84-f7c6-4a94-a4c4-e4f4fd1972a3</string>
+          <string>3ba2bdb5-ffa0-4e1e-b90c-823611825a27</string>
+          <string>74d83325-f4b6-4946-a4f4-bbbe65cbab31</string>
+          <string>e4ccbcbb-721a-4196-a551-3db9672cb319</string>
+          <string>717c1a18-87a3-4acb-9b3a-f104e34436cc</string>
+          <string>0e57621f-c3c7-4ad6-83c4-eef58a5a68e6</string>
+          <string>874f2eb9-068c-4503-973c-efd4f9658f50</string>
+          <string>056f65c0-5b98-4bfc-be18-0a7204f350fc</string>
+        </channelIds>
+        <backgroundColor>
+          <red>128</red>
+          <green>128</green>
+          <blue>0</blue>
+          <alpha>255</alpha>
+        </backgroundColor>
+      </channelTag>
+    </channelTags>
+  </exportData>
+</channel>
