@@ -21,3 +21,5 @@ fec-mirth is used to process clinical messages to fec-db
 
 2. Import channels
 
+3. Change source directory according to your needs
+
